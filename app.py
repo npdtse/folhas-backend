@@ -21,6 +21,12 @@ EXTRACTORS = {
     "MODELO_MULTSERV": extrair_dados_modelo_multserv,
 }
 
+# Verificar se a API está viva
+@app.route('/health')
+def health_check():
+    """Um endpoint simples que o serviço de ping pode chamar."""
+    return "OK", 200
+
 @app.route('/upload', methods=['POST'])
 def upload_files():
     uploaded_files = request.files.getlist('files')
@@ -65,3 +71,5 @@ def upload_files():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+

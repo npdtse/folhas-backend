@@ -8,7 +8,10 @@ from processador_folhas import (
     extrair_dados_modelo_ge,
     extrair_dados_modelo_senior,
     extrair_dados_modelo_siga,
-    extrair_dados_modelo_multserv
+    extrair_dados_modelo_tipo_2,
+    extrair_dados_modelo_fundacao,
+    extrair_dados_modelo_amazon,
+    extrair_dados_modelo_chain
 )
 
 app = Flask(__name__)
@@ -18,7 +21,10 @@ EXTRACTORS = {
     "MODELO_GE": extrair_dados_modelo_ge,
     "MODELO_SENIOR": extrair_dados_modelo_senior,
     "MODELO_SIGA": extrair_dados_modelo_siga,
-    "MODELO_MULTSERV": extrair_dados_modelo_multserv,
+    "MODELO_TIPO_2": lambda stream: extrair_dados_modelo_tipo_2(stream, identificar_modelo(stream)),
+    "MODELO_FUNDACAO": extrair_dados_modelo_fundacao,
+    "MODELO_AMAZON": extrair_dados_modelo_amazon,
+    "MODELO_CHAIN": extrair_dados_modelo_chain
 }
 
 # Verificar se a API está viva
@@ -71,5 +77,6 @@ def upload_files():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 

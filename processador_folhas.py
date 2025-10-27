@@ -438,21 +438,7 @@ def processar_arquivos(lista_de_streams, nomes_dos_arquivos):
 
     if 'Matricula' in df.columns:
         df['Matricula'] = df['Matricula'].astype(str)
-        
-        # Define as regras de agregação
-        agg_rules = {}
-        for col in df.columns:
-            if col != 'Matricula': # Não agrega a chave de agrupamento
-                # Soma colunas numéricas, pega o primeiro valor para as outras (texto, datas)
-                if pd.api.types.is_numeric_dtype(df[col]):
-                    agg_rules[col] = 'sum'
-                else:
-                    agg_rules[col] = 'first'
-        
-        # Agrupa por matrícula e aplica as regras de fusão
-        if agg_rules:
-            df = df.groupby('Matricula', as_index=False).agg(agg_rules)
-    
+
     colunas_numericas = ['Salário', 'Salário Base', 'Total Bruto', 'Total de Descontos', 'INSS', 'IRRF', 'Valor FGTS', 'Total Salário Líquido']
     for col in colunas_numericas:
         if col in df.columns:
@@ -460,29 +446,63 @@ def processar_arquivos(lista_de_streams, nomes_dos_arquivos):
                 df[col].astype(str).str.replace('.', '', regex=False).str.replace(',', '.', regex=False),
                 errors='coerce'
             ).fillna(0)
+            
+
     if 'Admissão' in df.columns:
         df['Admissão'] = pd.to_datetime(df['Admissão'], format='%d/%m/%Y', errors='coerce').dt.date
+
+    if 'Matricula' in df.columns:
+        agg_rules = {}
+        for col in df.columns:
+            if col != 'Matricula': 
+
+                if pd.api.types.is_numeric_dtype(df[col]):
+                    agg_rules[col] = 'sum'  # Números serão SOMADOS
+                else:
+                    agg_rules[col] = 'first' # Textos/Datas pegarão o primeiro
+        
+        
+        if agg_rules:
+            df = df.groupby('Matricula', as_index=False).agg(agg_rules)
+            
+    
+
+    
     if 'Total Bruto' in df.columns:
         df.rename(columns={'Total Bruto': 'Base de Cálculo (Bruto)'}, inplace=True)
+    
+    
     #if 'Base de Cálculo (Bruto)' in df.columns and 'INSS' in df.columns:
     #    df['INSS_Calculado'] = df['Base de Cálculo (Bruto)'].apply(calcular_inss)
     #    df['INSS_Diferenca'] = np.round(df['INSS_Calculado'] - df['INSS'], 2)
     #if 'Base de Cálculo (Bruto)' in df.columns and 'IRRF' in df.columns:
     #    df['IRRF_Calculado_Simplificado'] = df.apply(lambda row: calcular_irrf_simplificado(row['Base de Cálculo (Bruto)'], row['INSS']), axis=1)
     #    df['IRRF_Diferenca_Simplificada'] = np.round(df['IRRF_Calculado_Simplificado'] - df['IRRF'], 2)
+    
+    
     agg_funcs = {
         'Quantidade_Registros': ('Matricula', 'count'),
         'Soma_Base_Calculo': ('Base de Cálculo (Bruto)', 'sum'),
         'Soma_Total_Liquido': ('Total Salário Líquido', 'sum')
     }
+    
+    
     #if 'INSS_Diferenca' in df.columns:
     #    agg_funcs['Soma_Diferenca_INSS'] = ('INSS_Diferenca', 'sum')
     #if 'IRRF_Diferenca_Simplificada' in df.columns:
     #    agg_funcs['Soma_Diferenca_IRRF'] = ('IRRF_Diferenca_Simplificada', 'sum')
+
+    # O 'df' (principal) agora está com os tipos corretos e agrupado.
+    # O 'resumo_df' (agora) é uma agregação do 'df' já numérico.
     resumo_df = df.groupby('Origem').agg(**agg_funcs).reset_index()
+
+
+    # Este bloco é o que transforma os números em TEXTO no Excel.
+    # Ele DEVE ficar comentado.
     #for col in resumo_df.columns:
     #    if col.startswith('Soma_'):
     #        resumo_df[col] = resumo_df[col].map('{:,.2f}'.format)
+            
     return df, resumo_df, arquivos_com_sucesso, arquivos_com_falha
 """
 def calcular_inss(salario_bruto):
@@ -513,4 +533,5 @@ def calcular_irrf_simplificado(salario_bruto, inss_descontado):
             irrf_calculado = (base_calculo * item["aliquota"]) - item["deducao"]
             return round(max(irrf_calculado, 0), 2)
     return 0.0"""
+
 

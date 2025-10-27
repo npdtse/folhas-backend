@@ -532,6 +532,8 @@ def calcular_irrf_simplificado(salario_bruto, inss_descontado):
         if base_calculo <= item["faixa"][1]:
             irrf_calculado = (base_calculo * item["aliquota"]) - item["deducao"]
             return round(max(irrf_calculado, 0), 2)
-    return 0.0"""
+    return 0.0
+    """
+
 
 

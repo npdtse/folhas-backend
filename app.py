@@ -54,7 +54,7 @@ def upload_files():
         dados_df.to_excel(writer, index=False, sheet_name='Dados Consolidados')
         # Verifica se o resumo_df foi criado antes de salvar
         if resumo_df is not None and not resumo_df.empty:
-            #resumo_df.to_excel(writer, index=False, sheet_name='Resumo')
+            resumo_df.to_excel(writer, index=False, sheet_name='Resumo')
     
     output.seek(0)
 
@@ -68,5 +68,6 @@ def upload_files():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 

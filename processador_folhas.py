@@ -480,9 +480,9 @@ def processar_arquivos(lista_de_streams, nomes_dos_arquivos):
     #if 'IRRF_Diferenca_Simplificada' in df.columns:
     #    agg_funcs['Soma_Diferenca_IRRF'] = ('IRRF_Diferenca_Simplificada', 'sum')
     resumo_df = df.groupby('Origem').agg(**agg_funcs).reset_index()
-    for col in resumo_df.columns:
-        if col.startswith('Soma_'):
-            resumo_df[col] = resumo_df[col].map('{:,.2f}'.format)
+    #for col in resumo_df.columns:
+    #    if col.startswith('Soma_'):
+    #        resumo_df[col] = resumo_df[col].map('{:,.2f}'.format)
     return df, resumo_df, arquivos_com_sucesso, arquivos_com_falha
 """
 def calcular_inss(salario_bruto):
@@ -513,3 +513,4 @@ def calcular_irrf_simplificado(salario_bruto, inss_descontado):
             irrf_calculado = (base_calculo * item["aliquota"]) - item["deducao"]
             return round(max(irrf_calculado, 0), 2)
     return 0.0"""
+

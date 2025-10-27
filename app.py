@@ -3,29 +3,14 @@ from flask_cors import CORS
 import pandas as pd
 import io
 
-from processador_folhas import (
-    identificar_modelo,
-    extrair_dados_modelo_ge,
-    extrair_dados_modelo_senior,
-    extrair_dados_modelo_siga,
-    extrair_dados_modelo_tipo_2,
-    extrair_dados_modelo_fundacao,
-    extrair_dados_modelo_amazon,
-    extrair_dados_modelo_chain
-)
+# Removidas as importações específicas de extração
+# NOVO: Importa apenas a função orquestradora principal
+from processador_folhas import processar_arquivos
 
 app = Flask(__name__)
 CORS(app)
 
-EXTRACTORS = {
-    "MODELO_GE": extrair_dados_modelo_ge,
-    "MODELO_SENIOR": extrair_dados_modelo_senior,
-    "MODELO_SIGA": extrair_dados_modelo_siga,
-    "MODELO_TIPO_2": lambda stream: extrair_dados_modelo_tipo_2(stream, identificar_modelo(stream)),
-    "MODELO_FUNDACAO": extrair_dados_modelo_fundacao,
-    "MODELO_AMAZON": extrair_dados_modelo_amazon,
-    "MODELO_CHAIN": extrair_dados_modelo_chain
-}
+# Removido: Dicionário EXTRACTORS (agora é gerenciado internamente pelo processador_folhas)
 
 # Verificar se a API está viva
 @app.route('/health')
@@ -40,31 +25,36 @@ def upload_files():
     if not uploaded_files:
         return "Nenhum arquivo enviado.", 400
 
-    dados_consolidados = []
+    # Removido: Loop manual, identificação e extração que estavam aqui.
 
-    for file in uploaded_files:
-        pdf_stream = io.BytesIO(file.read())
-        modelo = identificar_modelo(pdf_stream)
-        extractor_func = EXTRACTORS.get(modelo)
-        
-        if extractor_func:
-            dados_extraidos = extractor_func(pdf_stream)
-            if dados_extraidos:
-                print(f"Sucesso! {len(dados_extraidos)} registros extraídos de '{file.filename}'.")
-                dados_consolidados.extend(dados_extraidos)
-            else:
-                 print(f"Aviso: Nenhum registro extraído de '{file.filename}' (Modelo: {modelo}).")
-        else:
-            print(f"Aviso: Modelo '{modelo}' não reconhecido para o arquivo '{file.filename}'.")
+    # NOVO: Prepara as listas de streams e nomes para a nova função
+    lista_de_streams = [io.BytesIO(file.read()) for file in uploaded_files]
+    nomes_dos_arquivos = [file.filename for file in uploaded_files]
 
-    if not dados_consolidados:
+    # NOVO: Chama a função orquestradora que faz todo o trabalho pesado
+    dados_df, resumo_df, sucesso_log, falha_log = processar_arquivos(lista_de_streams, nomes_dos_arquivos)
+
+    # NOVO: Exibe os logs no terminal do servidor
+    print("--- Relatório de Processamento ---")
+    if sucesso_log:
+        print("Arquivos com Sucesso:", sucesso_log)
+    if falha_log:
+        print("Arquivos com Falha:", falha_log)
+    print("---------------------------------")
+
+    # Se nenhum dado foi extraído de nenhum arquivo, retorna um erro
+    if dados_df is None:
         return "Não foi possível extrair dados de nenhum dos arquivos enviados.", 400
 
-    df_final = pd.DataFrame(dados_consolidados)
+    # Cria o arquivo Excel em memória
     output = io.BytesIO()
     
+    # NOVO: Usa o ExcelWriter para salvar múltiplas abas (planilhas)
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df_final.to_excel(writer, index=False, sheet_name='Consolidado')
+        dados_df.to_excel(writer, index=False, sheet_name='Dados Consolidados')
+        # Verifica se o resumo_df foi criado antes de salvar
+        if resumo_df is not None and not resumo_df.empty:
+            #resumo_df.to_excel(writer, index=False, sheet_name='Resumo')
     
     output.seek(0)
 
@@ -72,11 +62,11 @@ def upload_files():
         output,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         as_attachment=True,
-        download_name='Planilha_Pagamentos.xlsx'
+        # NOVO: Nome do arquivo alterado para refletir a nova saída
+        download_name='Folha_Extraida.xlsx'
     )
 
 if __name__ == '__main__':
     app.run(debug=True)
-
 
 

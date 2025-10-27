@@ -36,7 +36,7 @@ def extrair_dados_modelo_ge(pdf_stream):
             if m := re.search(r'9010\s*-\s*INSS\s+[\d.,]+\s+([\d.,]+)', bloco): dados['INSS'] = m.group(1).strip()
             if m := re.search(r'Valor FGTS:\s*([\d.,]+)', bloco): dados['Valor FGTS'] = m.group(1).strip()
             if m := re.search(r'Total Salário Líquido:\s*([\d.,]+)', bloco): dados['Total Salário Líquido'] = m.group(1).strip()
-            dados['Origem'] = 'Modelo GE'
+            dados['Origem'] = 'Modelo +Pessoal'
             lista_funcionarios.append(dados)
         return lista_funcionarios
     except Exception: return []
@@ -436,6 +436,7 @@ def processar_arquivos(lista_de_streams, nomes_dos_arquivos):
 
     df = pd.DataFrame(dados_consolidados)
 
+       
     if 'Matricula' in df.columns:
         df['Matricula'] = df['Matricula'].astype(str)
 
@@ -534,6 +535,3 @@ def calcular_irrf_simplificado(salario_bruto, inss_descontado):
             return round(max(irrf_calculado, 0), 2)
     return 0.0
     """
-
-
-

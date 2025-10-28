@@ -438,7 +438,15 @@ def processar_arquivos(lista_de_streams, nomes_dos_arquivos):
 
        
     if 'Matricula' in df.columns:
-        df['Matricula'] = df['Matricula'].astype(str)
+        df['Matricula'] = pd.to_numeric(df['Matricula'], errors='coerce')
+        df.dropna(subset=['Matricula'], inplace=True)
+        try:
+            # Verifica se todos os valores são inteiros (não têm parte decimal)
+            if df['Matricula'].apply(lambda x: x.is_integer()).all():
+                df['Matricula'] = df['Matricula'].astype(int)
+        except Exception as e:
+            # Se falhar (ex: se houver algum NaN restante), mantém como float
+            print(f"Aviso: Não foi possível converter matrículas para inteiro, mantendo como float. Erro: {e}")
 
     colunas_numericas = ['Salário', 'Salário Base', 'Total Bruto', 'Total de Descontos', 'INSS', 'IRRF', 'Valor FGTS', 'Total Salário Líquido']
     for col in colunas_numericas:
@@ -534,4 +542,5 @@ def calcular_irrf_simplificado(salario_bruto, inss_descontado):
             irrf_calculado = (base_calculo * item["aliquota"]) - item["deducao"]
             return round(max(irrf_calculado, 0), 2)
     return 0.0
+
     """

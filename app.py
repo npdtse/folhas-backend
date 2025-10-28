@@ -50,7 +50,7 @@ def upload_files():
     output = io.BytesIO()
     
    
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+    with pd.ExcelWriter(output, engine='xlsxwriter', datetime_format='dd-mm-yyyy') as writer:
         dados_df.to_excel(writer, index=False, sheet_name='Dados Consolidados')
         # Verifica se o resumo_df foi criado antes de salvar
         #if resumo_df is not None and not resumo_df.empty:
@@ -68,6 +68,7 @@ def upload_files():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 
